@@ -1,0 +1,41 @@
+{
+    "name": "tr-key-vault-client",
+    "version": "0.0.0",
+    "description": "Client library and command line client for the tr-key-vault key vault server. Server-side JWT/JWE operations with vault-held keys over a minimal JSON-over-POST API.",
+    "keywords": [
+        "key-vault",
+        "vault",
+        "key management",
+        "jwt",
+        "jwe",
+        "jwk",
+        "jose",
+        "client"
+    ],
+    "main": "index.js",
+    "files": [
+        "index.js",
+        "README.md",
+        "LICENSE"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "test": "node --test test/*.test.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rinne/node-tr-key-vault-client.git"
+    },
+    "author": {
+        "name": "Timo J. Rinne",
+        "email": "tri@iki.fi",
+        "url": "https://github.com/rinne/"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/rinne/node-tr-key-vault-client/issues"
+    },
+    "homepage": "https://github.com/rinne/node-tr-key-vault-client#readme"
+}
