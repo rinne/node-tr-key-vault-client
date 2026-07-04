@@ -57,6 +57,9 @@ Node.js ≥ 18. No runtime dependencies for the library itself.
 The server project — the vault this client talks to — lives at
 [github.com/rinne/tr-key-vault](https://github.com/rinne/tr-key-vault).
 
-## License
+## Author and license
 
-MIT
+Copyright (c) 2026 Timo J. Rinne <tri@iki.fi>
+
+MIT — see [`LICENSE`](LICENSE). (The tr-key-vault *server* is a
+separate, independent project with its own license.)
