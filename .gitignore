@@ -3,6 +3,7 @@ node_modules/
 # Internal working / design documents — not published. The public
 # documentation is README.md.
 SPEC.md
+KV-CLIENT-SPEC.md
 IMPLEMENTATION-PLAN.md
 OPEN-QUESTIONS.md
 FUTURE-NOTES.md
