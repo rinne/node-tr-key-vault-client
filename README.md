@@ -116,8 +116,13 @@ npx --package=tr-key-vault-client kv-client healthz --url https://kv.example.com
 ```
 
 ```
-kv-client [global-options] <command> [command-options] [args]
+kv-client <command> [<opt> ...] [<token|request>]
 ```
+
+The command comes first (before any option). The optional trailing
+argument is the JOSE token for `verify-jwt` / `decrypt-jwe` (or `-`
+for stdin) or the request name for `raw`; it may sit right after the
+command or after all the options.
 
 Connection/credentials: `--url`, `--user`, `--token` / `--token-file`
 (or `KV_CLIENT_OPT_URL` / `_USER` / `_TOKEN` / `_TOKEN_FILE`).
@@ -143,10 +148,128 @@ kv-client create-jwt --kid "$kid" --data '{"sub":"demo"}' --field token \
   | kv-client verify-jwt --kid "$kid"
 ```
 
-Exit codes: `0` success, `1` local/usage error, `2` transport error
-(couldn't reach the vault), `3` API operation error (the vault
-returned `status: "error"`). `--insecure`/`-k` and `--ca-file` handle
-a self-signed proxy in test setups.
+### Command examples
+
+The examples assume `KV_CLIENT_OPT_URL` / `_USER` / `_TOKEN` are
+exported as above (or pass `--url` / `--user` / `--token`).
+
+**Probes** (unauthenticated — only `--url` is needed):
+
+```sh
+kv-client healthz
+kv-client readyz
+```
+
+**healthcheck** — authenticated liveness:
+
+```sh
+kv-client healthcheck
+kv-client healthcheck --field uptime      # -> 42
+```
+
+**generate-key** — `--alg` is required; the caller becomes owner:
+
+```sh
+# Symmetric MAC key; print just the kid
+kv-client generate-key --alg HS256 --field kid
+
+# Asymmetric signing key, return the public JWK too
+kv-client generate-key --alg ES256 --return-public-key
+
+# RSA encryption key with an explicit modulus
+kv-client generate-key --alg RSA-OAEP-256 --key-length 4096 --field kid
+
+# Expiring key (hands-off expiry) granting another user 'verify'
+kv-client generate-key --alg ES256 \
+  --exp $(( $(date +%s) + 3600 )) \
+  --acl '{"22222222-2222-4222-8222-222222222222":["verify"]}'
+
+# ACL from a file instead of inline
+kv-client generate-key --alg A256GCMKW --acl-file ./acl.json --field kid
+```
+
+**public-key** — fetch an asymmetric key's public JWK:
+
+```sh
+kv-client public-key --kid "$kid"
+kv-client public-key --kid "$kid" --field key --compact-json
+```
+
+**create-jwt** — sign a JWT (payload via `--data`, `--data-file` or
+stdin):
+
+```sh
+kv-client create-jwt --kid "$kid" --data '{"sub":"demo","n":1}'
+kv-client create-jwt --kid "$kid" --data-file claims.json
+echo '{"sub":"demo"}' | kv-client create-jwt --kid "$kid" --data -
+kv-client create-jwt --kid "$kid" --data '{"sub":"demo"}' --field token
+```
+
+**verify-jwt** — the token is a positional argument (after the
+command, or last) or stdin:
+
+```sh
+kv-client verify-jwt --kid "$kid" eyJhbGciOi...        # token as argument
+kv-client verify-jwt eyJhbGciOi... --kid "$kid"        # or right after the command
+cat token.jwt | kv-client verify-jwt --kid "$kid"      # or from stdin
+kv-client verify-jwt --kid "$kid" --field data eyJ...  # just the claims
+```
+
+**create-jwe** — encrypt (any JSON payload; optional compression):
+
+```sh
+kv-client create-jwe --kid "$kid" --data '{"secret":42}'
+kv-client create-jwe --kid "$kid" --data '{"secret":42}' --compress auto --field token
+```
+
+**decrypt-jwe** — token positional or stdin, like verify-jwt:
+
+```sh
+kv-client decrypt-jwe --kid "$kid" eyJhbGciOi...
+cat token.jwe | kv-client decrypt-jwe --kid "$kid" --field data
+```
+
+**revoke-key** — hard delete:
+
+```sh
+kv-client revoke-key --kid "$kid"
+```
+
+**export-key** — secret material (only if the server allows exports
+and you hold `export-secret-key`):
+
+```sh
+kv-client export-key --kid "$kid"
+kv-client export-key --kid "$kid" --field key --compact-json
+```
+
+**list-keys** — keys you can use:
+
+```sh
+kv-client list-keys
+kv-client list-keys --compact-json
+```
+
+**raw** — send an arbitrary request name with a `--data` body (for
+testing unknown operations, malformed data, or new operations without
+a tool update):
+
+```sh
+kv-client raw list-keys
+kv-client raw generate-key --data '{"alg":"HS256"}'
+kv-client raw no-such-op          # -> exit 3, API error 1002
+```
+
+### Output and exit codes
+
+Output is pretty-printed JSON by default; `--compact-json` for one
+line, `--raw` for the whole `{status, op, data}` envelope,
+`--field <name>` for a single field (a scalar printed bare, an object
+as JSON). Exit codes: `0` success, `1` local/usage error, `2`
+transport error (couldn't reach the vault), `3` API operation error
+(the vault returned `status: "error"`). `--insecure`/`-k` and
+`--ca-file` handle a self-signed proxy in test setups. `--verbose`
+logs the request to stderr.
 
 ## The vault
 

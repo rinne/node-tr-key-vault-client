@@ -146,7 +146,14 @@ module.exports = async function() {
 					   hasArg: true,
 					   optArgCb: compressCb }
 				 ])
-				 .help(name)
+				 // The command word is lifted off argv before optist
+				 // parses (see above), so it is not one of optist's
+				 // options; spell it into the usage synopsis, and name
+				 // the trailing positional (the verify/decrypt token or
+				 // the raw request name).
+				 .describeParam(0, 'token|request',
+								'For verify-jwt/decrypt-jwe: the JOSE token (or - for stdin). For raw: the request name.')
+				 .help(name + ' <command>')
 				 .parse(av, 0, 1));
 
 	if (! command) {

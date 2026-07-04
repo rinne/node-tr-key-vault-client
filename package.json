@@ -1,6 +1,6 @@
 {
     "name": "tr-key-vault-client",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Client library and command line client for the tr-key-vault key vault server. Server-side JWT/JWE operations with vault-held keys over a minimal JSON-over-POST API.",
     "keywords": [
         "key-vault",
