@@ -179,6 +179,10 @@ kv-client generate-key --alg ES256 --return-public-key
 # RSA encryption key with an explicit modulus
 kv-client generate-key --alg RSA-OAEP-256 --key-length 4096 --field kid
 
+# Post-quantum ML-KEM encryption key (vault >= 1.0.0; the algorithm
+# registry is the server's — the client forwards any alg verbatim)
+kv-client generate-key --alg ML-KEM-768@spinium.com --return-public-key
+
 # Expiring key (hands-off expiry) granting another user 'verify'
 kv-client generate-key --alg ES256 \
   --exp $(( $(date +%s) + 3600 )) \
